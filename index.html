@@ -683,11 +683,11 @@
         </div>
         
         <!-- Batch Processing Card for Teachers -->
-        <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #3498db15, #2ecc7115);">
-            <h2 style="border-bottom-color: #3498db;">
+        <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #667eea, #764ba2);">
+            <h2 style="border-bottom-color: #ffffff; color: #ffffff;">
                 <span data-en="🎯 Batch Processing for Educators" data-ar="🎯 معالجة جماعية للمعلمين">🎯 Batch Processing for Educators</span>
             </h2>
-            <p style="color: #7f8c8d; margin-bottom: 20px;">
+            <p style="color: #ffffff; margin-bottom: 20px; opacity: 0.95;">
                 <span data-en="Upload multiple text files at once and get a comprehensive report. Perfect for grading assignments!" data-ar="ارفع ملفات نصية متعددة واحصل على تقرير شامل. مثالي لتقييم الواجبات!">Upload multiple text files at once and get a comprehensive report. Perfect for grading assignments!</span>
             </p>
             
@@ -769,8 +769,8 @@
         </div>
         
         <!-- Support & Tools Card -->
-        <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #667eea15, #764ba215);">
-            <h2 style="border-bottom-color: #ffc107;">
+        <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #667eea, #764ba2);">
+            <h2 style="border-bottom-color: #ffffff; color: #ffffff;">
                 <span data-en="💝 Support & Recommended Tools" data-ar="💝 دعم وأدوات مقترحة">💝 Support & Recommended Tools</span>
             </h2>
             
@@ -821,7 +821,7 @@
                 </div>
             </div>
             
-            <p style="text-align: center; color: #666; font-size: 0.9em; margin-top: 15px;">
+            <p style="text-align: center; color: #ffffff; font-size: 0.9em; margin-top: 15px; opacity: 0.9;">
                 <span data-en="💚 Thank you for using our tool! Your support helps us improve." data-ar="💚 شكراً لاستخدامك لأداتنا! دعمك يساعدنا على التحسين.">💚 Thank you for using our tool! Your support helps us improve.</span>
             </p>
         </div>
@@ -2021,6 +2021,9 @@
             console.log('🧠 Active Models: Statistical + Linguistic + Stylometric + Pattern');
             console.log('🎯 Target: 99%+ Accuracy with Advanced Multi-Layer Analysis');
             console.log('📚 History System: Enabled');
+            
+            // Apply default language (English)
+            updateUIText();
             
             // Load history on startup
             historyManager.updateHistoryUI();
