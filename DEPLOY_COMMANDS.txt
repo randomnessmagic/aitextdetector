@@ -1,0 +1,42 @@
+# 🚀 أوامر النشر على GitHub
+
+## بعد إنشاء repository على GitHub، استخدم هذه الأوامر:
+
+# 1. ربط repository (استبدل YOUR_USERNAME باسمك)
+git remote add origin https://github.com/YOUR_USERNAME/aitextdetector.git
+
+# 2. تسمية branch الرئيسي
+git branch -M main
+
+# 3. رفع الملفات
+git push -u origin main
+
+## ملاحظة:
+- إذا طُلب منك username/password، استخدم:
+  Username: your_github_username
+  Password: Personal Access Token (ليس password حسابك!)
+  
+- للحصول على Personal Access Token:
+  1. GitHub → Settings → Developer settings
+  2. Personal access tokens → Tokens (classic)
+  3. Generate new token
+  4. Select: repo (full control)
+  5. Generate & copy the token
+
+---
+
+## بعد الرفع بنجاح:
+
+# 4. تفعيل GitHub Pages
+- اذهب لـ repository على GitHub
+- Settings → Pages
+- Source: Deploy from a branch
+- Branch: main / (root)
+- Save
+
+---
+
+# 5. انتظر 1-2 دقيقة، ثم افتح:
+https://YOUR_USERNAME.github.io/aitextdetector
+
+✅ إذا فتح الموقع = نجح!
