@@ -1072,8 +1072,12 @@
 
             // Re-render results if they exist
             if (currentAnalysis && currentAnalysis.prediction) {
-                displayResults(currentAnalysis.prediction, currentAnalysis.analyzer);
-                updateInsights(currentAnalysis.prediction, currentAnalysis.analyzer);
+                displayResults(
+                    currentAnalysis.prediction,
+                    currentAnalysis.analyzer,
+                    currentAnalysis.tokenRisks,
+                    currentAnalysis.processingTime
+                );
             }
         }
 
