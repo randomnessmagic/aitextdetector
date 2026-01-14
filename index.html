@@ -879,7 +879,7 @@
                         last 50 analyses are saved locally</span>
                 </p>
                 <button class="btn btn-secondary"
-                    onclick="if(confirm(currentLang === 'ar' ? 'هل تريد مسح جميع السجلات؟' : 'Clear all history?')) { localStorage.removeItem('ai_detector_history'); document.getElementById('historyList').innerHTML = '<p style=\'color: #999; text-align: center; padding: 20px;\'>No history yet</p>'; }"
+                    onclick="if(confirm(currentLang === 'ar' ? 'هل تريد مسح جميع السجلات؟' : 'Clear all history?')) { if(typeof historyManager !== 'undefined' && historyManager.clearHistory) { historyManager.clearHistory(); } else { localStorage.removeItem('ai_detector_history'); document.getElementById('historyList').innerHTML = '<p style=\'color: #999; text-align: center; padding: 20px;\'>No history yet</p>'; } }"
                     style="width: auto; padding: 8px 20px;">
                     <span data-en="🗑️ Clear History" data-ar="🗑️ مسح السجل">🗑️ Clear History</span>
                 </button>
@@ -2458,7 +2458,7 @@
     <!-- Version Footer -->
     <footer style="text-align: center; padding: 20px; background: #2c3e50; color: white; margin-top: 40px;">
         <p style="margin: 5px 0; font-size: 0.75em; opacity: 0.8; font-family: 'Courier New', monospace;">
-            v1.5 • 14 Jan 2026 • 15:12 Amman Local Time
+            v1.6 • 14 Jan 2026 • 15:30 Amman Local Time
         </p>
     </footer>
 </body>
