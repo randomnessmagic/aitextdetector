@@ -29,8 +29,8 @@ function handleDrop(e) {
 function handleFiles(files) {
     if (files.length === 0) return;
     
-    if (files.length > 20) {
-        alert('Maximum 20 files allowed');
+    if (files.length > 50) {
+        alert('Maximum 50 files allowed');
         return;
     }
     

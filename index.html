@@ -627,19 +627,19 @@
 
                     <div class="metrics-grid">
                         <div class="metric-box">
-                            <div class="metric-label">Entropy (الفوضى)</div>
+                            <div class="metric-label" data-en="Entropy (Chaos)" data-ar="الفوضى">Entropy (Chaos)</div>
                             <div class="metric-value" id="entropyValue">0.00</div>
                         </div>
                         <div class="metric-box">
-                            <div class="metric-label">Perplexity (التنبؤية)</div>
+                            <div class="metric-label" data-en="Perplexity (Predictability)" data-ar="السهولة والتنبؤ">Perplexity (Predictability)</div>
                             <div class="metric-value" id="perplexityValue">0.00</div>
                         </div>
                         <div class="metric-box">
-                            <div class="metric-label">Burstiness (التكرار)</div>
+                            <div class="metric-label" data-en="Burstiness (Repetition)" data-ar="التكرار">Burstiness (Repetition)</div>
                             <div class="metric-value" id="burstinessValue">0.00</div>
                         </div>
                         <div class="metric-box">
-                            <div class="metric-label">TTR (تنوع المفردات)</div>
+                            <div class="metric-label" data-en="TTR (Vocabulary Diversity)" data-ar="تنوع المفردات">TTR (Vocabulary Diversity)</div>
                             <div class="metric-value" id="ttrValue">0.00</div>
                         </div>
                     </div>
@@ -699,9 +699,9 @@
                         <span data-en="Drop files here or click to browse" data-ar="أسقط الملفات هنا أو اضغط للتصفح">Drop files here or click to browse</span>
                     </h3>
                     <p style="color: #95a5a6;">
-                        <span data-en="Supports: .txt, .docx, .pdf | Max 20 files" data-ar="يدعم: .txt, .docx, .pdf | حتى 20 ملف">نيدعم: .txt, .docx, .pdf | حتى 20 ملف</span>
+                        <span data-en="Supports: .txt, .docx, .pdf, .html | Max 50 files" data-ar="يدعم: .txt, .docx, .pdf, .html | حتى 50 ملف">Supports: .txt, .docx, .pdf, .html | Max 50 files</span>
                     </p>
-                    <input type="file" id="fileInput" multiple accept=".txt,.doc,.docx,.pdf" style="display: none;" onchange="handleFiles(this.files)">
+                    <input type="file" id="fileInput" multiple accept=".txt,.doc,.docx,.pdf,.html,.htm" style="display: none;" onchange="handleFiles(this.files)">
                 </div>
             </div>
             
@@ -966,6 +966,12 @@
             if (noResults && noResults.style.display !== 'none') {
                 noResults.innerHTML = `<p style="font-size: 1.2em;">${t.waiting}</p>`;
             }
+            
+            // Update all elements with data-en and data-ar attributes
+            document.querySelectorAll('[data-en]').forEach(el => {
+                const text = currentLang === 'en' ? el.getAttribute('data-en') : el.getAttribute('data-ar');
+                if (text) el.textContent = text;
+            });
         }
 
         // ============================================
@@ -1886,6 +1892,17 @@
                     const timestamp = new Date().toLocaleString();
                     const filename = `AI_Detection_Report_${Date.now()}.pdf`;
                     
+                    // Clone element for PDF to avoid affecting display
+                    const clone = element.cloneNode(true);
+                    clone.style.display = 'block';
+                    clone.style.position = 'relative';
+                    clone.style.backgroundColor = '#ffffff';
+                    clone.style.padding = '20px';
+                    clone.style.maxWidth = '210mm';
+                    
+                    // Temporarily add to document
+                    document.body.appendChild(clone);
+                    
                     const opt = {
                         margin: [10, 10, 10, 10],
                         filename: filename,
@@ -1896,32 +1913,37 @@
                         html2canvas: { 
                             scale: 2,
                             useCORS: true,
-                            logging: false,
+                            logging: true,
                             letterRendering: true,
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#ffffff',
+                            windowWidth: 794,  // A4 width in px
+                            windowHeight: 1123 // A4 height in px
                         },
                         jsPDF: { 
-                            orientation: 'p', 
+                            orientation: 'portrait', 
                             unit: 'mm', 
                             format: 'a4',
                             compress: true
                         },
                         pagebreak: { 
-                            mode: ['avoid-all', 'css', 'legacy'],
-                            avoid: '.metric-box'
+                            mode: ['avoid-all', 'css'],
+                            before: '.page-break',
+                            avoid: ['.metric-box', '.classification']
                         }
                     };
 
-                    html2pdf().set(opt).from(element).save().then(() => {
+                    html2pdf().set(opt).from(clone).save().then(() => {
+                        document.body.removeChild(clone);
                         btn.textContent = originalText;
                         btn.disabled = false;
                     }).catch(err => {
                         console.error('PDF Export Error:', err);
+                        document.body.removeChild(clone);
                         alert(currentLang === 'ar' ? 'حدث خطأ في التصدير' : 'Export error occurred');
                         btn.textContent = originalText;
                         btn.disabled = false;
                     });
-                }, 100);
+                }, 300);
             } catch (error) {
                 console.error('PDF generation failed:', error);
                 alert(currentLang === 'ar' ? 'فشل توليد PDF' : 'PDF generation failed');
