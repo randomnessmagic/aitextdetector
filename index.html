@@ -41,6 +41,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"
         onerror="window.Chart = null; console.warn('Chart.js failed to load');"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- FileSaver.js for proper file downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <!-- PDF.js for PDF parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <!-- Mammoth.js for DOCX parsing -->
@@ -2291,8 +2293,14 @@
                         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                     };
 
-                    // Use html2pdf's native save method for proper PDF download
-                    html2pdf().set(opt).from(reportContainer).save().then(() => {
+                    // Use FileSaver.js for reliable PDF download with correct filename
+                    html2pdf().set(opt).from(reportContainer).outputPdf('blob').then((pdfBlob) => {
+                        // Create proper blob with PDF MIME type
+                        const blob = new Blob([pdfBlob], { type: 'application/pdf' });
+
+                        // Use FileSaver.js saveAs() for cross-browser compatible download
+                        saveAs(blob, filename + '.pdf');
+
                         // Clean up report container
                         document.body.removeChild(reportContainer);
 
@@ -2450,7 +2458,7 @@
     <!-- Version Footer -->
     <footer style="text-align: center; padding: 20px; background: #2c3e50; color: white; margin-top: 40px;">
         <p style="margin: 5px 0; font-size: 0.75em; opacity: 0.8; font-family: 'Courier New', monospace;">
-            v1.4 • 14 Jan 2026 • 15:05 Amman Local Time
+            v1.5 • 14 Jan 2026 • 15:12 Amman Local Time
         </p>
     </footer>
 </body>
