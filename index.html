@@ -2273,18 +2273,25 @@
                     </div>
                 `;
 
-                // Download as HTML instead of PDF - more reliable
+                // Download as HTML using FileSaver.js for reliable filename
                 const filename = `AI_Detection_Report_${Date.now()}.html`;
                 const htmlContent = '<!DOCTYPE html>' + reportContainer.innerHTML;
                 const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+
+                // Use FileSaver.js for reliable cross-browser download with correct filename
+                if (typeof saveAs !== 'undefined') {
+                    saveAs(blob, filename);
+                } else {
+                    // Fallback if FileSaver.js not loaded
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }
 
                 btn.innerHTML = originalHTML;
                 btn.disabled = false;
@@ -2362,14 +2369,20 @@
 
                 const dataStr = JSON.stringify(data, null, 2);
                 const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `AI_Detection_Report_${Date.now()}.json`;
-                link.click();
+                const filename = `AI_Detection_Report_${Date.now()}.json`;
 
-                // Clean up
-                setTimeout(() => URL.revokeObjectURL(url), 100);
+                // Use FileSaver.js for reliable cross-browser download with correct filename
+                if (typeof saveAs !== 'undefined') {
+                    saveAs(dataBlob, filename);
+                } else {
+                    // Fallback if FileSaver.js not loaded
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 100);
+                }
             } catch (error) {
                 console.error('JSON export failed:', error);
                 alert(currentLang === 'ar' ? 'فشل تصدير JSON' : 'JSON export failed');
@@ -2577,7 +2590,7 @@
             © 2026 AITextDetector.free - Free AI Text Detection Tool
         </p>
         <p style="margin: 5px 0; font-size: 0.75em; opacity: 0.7; font-family: 'Courier New', monospace;">
-            v1.8 • 14 Jan 2026 • 20:30 Amman Local Time
+            v1.9 • 14 Jan 2026 • 20:40 Amman Local Time
         </p>
     </footer>
 </body>
