@@ -2297,7 +2297,7 @@
                         const url = URL.createObjectURL(pdfBlob);
                         const link = document.createElement('a');
                         link.href = url;
-                        link.download = filename + '.pdf';
+                        link.setAttribute('download', filename + '.pdf');
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
@@ -2424,14 +2424,27 @@
 
             // Load history on startup
             historyManager.updateHistoryUI();
+
+            // Clear History Function
+            function clearHistory() {
+                if (confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف جميع السجلات؟' : 'Are you sure you want to clear all history?')) {
+                    localStorage.removeItem('analysisHistory');
+                    const container = document.getElementById('historyContainer');
+                    if (container) {
+                        container.innerHTML = '<p style="text-align: center; color: #95a5a6; padding: 20px;" data-en="No history yet" data-ar="لا يوجد سجل بعد">No history yet</p>';
+                    }
+                    console.log('✅ History cleared');
+                }
+            }
+
         });
     </script>
     <script src="batch-processing.js"></script>
-    
+
     <!-- Version Footer -->
     <footer style="text-align: center; padding: 20px; background: #2c3e50; color: white; margin-top: 40px;">
         <p style="margin: 5px 0; font-size: 0.75em; opacity: 0.8; font-family: 'Courier New', monospace;">
-            v1.2 • 14 Jan 2026 • 13:55 Amman Local Time
+            v1.2 • 14 Jan 2026 • 14:40 Amman Local Time
         </p>
     </footer>
 </body>
