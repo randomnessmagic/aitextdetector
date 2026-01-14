@@ -877,7 +877,7 @@
                         last 50 analyses are saved locally</span>
                 </p>
                 <button class="btn btn-secondary"
-                    onclick="if(confirm(i18n[currentLang].confirmClearHistory || 'Clear all history?')) historyManager.clearHistory()"
+                    onclick="if(confirm(currentLang === 'ar' ? 'هل تريد مسح جميع السجلات؟' : 'Clear all history?')) { localStorage.removeItem('ai_detector_history'); document.getElementById('historyList').innerHTML = '<p style=\'color: #999; text-align: center; padding: 20px;\'>No history yet</p>'; }"
                     style="width: auto; padding: 8px 20px;">
                     <span data-en="🗑️ Clear History" data-ar="🗑️ مسح السجل">🗑️ Clear History</span>
                 </button>
@@ -2291,49 +2291,30 @@
                         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                     };
 
-                    // Use outputPdf with save to ensure proper PDF generation
-                    html2pdf().set(opt).from(reportContainer).outputPdf('blob').then((pdfBlob) => {
-                        // Create download link with proper MIME type (no double wrapping)
-                        const url = URL.createObjectURL(pdfBlob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.setAttribute('download', filename + '.pdf');
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-
-
-                        // Cleanup
-                        setTimeout(() => {
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(url);
-
-                            // Show success message
-                            const successMsg = document.createElement('div');
-                            successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #27ae60; color: white; padding: 15px 25px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: Arial, sans-serif;';
-                            successMsg.textContent = currentLang === 'ar' ? '✅ تم تنزيل PDF بنجاح! تحقق من مجلد التنزيلات' : '✅ PDF Downloaded! Check your Downloads folder';
-                            document.body.appendChild(successMsg);
-
-                            setTimeout(() => {
-                                successMsg.style.opacity = '0';
-                                successMsg.style.transition = 'opacity 0.5s';
-                                setTimeout(() => document.body.removeChild(successMsg), 500);
-                            }, 4000);
-                        }, 2000);
-
-                        // Clean up
+                    // Use html2pdf's native save method for proper PDF download
+                    html2pdf().set(opt).from(reportContainer).save().then(() => {
+                        // Clean up report container
                         document.body.removeChild(reportContainer);
+
+                        // Restore button
                         btn.innerHTML = originalHTML;
                         btn.disabled = false;
 
-                        // Add visual confirmation
-                        btn.style.background = '#27ae60';
-                        btn.style.transform = 'scale(1.05)';
+                        // Show success message
+                        const successMsg = document.createElement('div');
+                        successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #27ae60; color: white; padding: 15px 25px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: Arial, sans-serif;';
+                        successMsg.textContent = currentLang === 'ar' ? '✅ تم تنزيل PDF بنجاح!' : '✅ PDF Downloaded Successfully!';
+                        document.body.appendChild(successMsg);
+
                         setTimeout(() => {
-                            btn.style.background = '';
-                            btn.style.transform = '';
-                            btn.style.transition = 'all 0.3s';
-                        }, 1000);
+                            successMsg.style.opacity = '0';
+                            successMsg.style.transition = 'opacity 0.5s';
+                            setTimeout(() => document.body.removeChild(successMsg), 500);
+                        }, 3000);
+
+                        // Visual feedback on button
+                        btn.style.background = '#27ae60';
+                        setTimeout(() => { btn.style.background = ''; }, 1500);
                     }).catch(err => {
                         console.error('PDF Export Error:', err);
                         document.body.removeChild(reportContainer);
@@ -2469,7 +2450,7 @@
     <!-- Version Footer -->
     <footer style="text-align: center; padding: 20px; background: #2c3e50; color: white; margin-top: 40px;">
         <p style="margin: 5px 0; font-size: 0.75em; opacity: 0.8; font-family: 'Courier New', monospace;">
-            v1.3 • 14 Jan 2026 • 14:50 Amman Local Time
+            v1.4 • 14 Jan 2026 • 15:05 Amman Local Time
         </p>
     </footer>
 </body>
