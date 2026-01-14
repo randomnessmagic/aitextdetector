@@ -772,8 +772,10 @@
                     </div>
 
                     <div class="export-buttons">
-                        <button class="btn btn-secondary" onclick="exportHTML()"><span data-en="📄 Export HTML"
-                                data-ar="📄 تصدير HTML">📄 Export HTML</span></button>
+                        <button class="btn btn-secondary" onclick="exportPDF()"><span data-en="📄 Export PDF"
+                                data-ar="📄 تصدير PDF">📄 Export PDF</span></button>
+                        <button class="btn btn-secondary" onclick="exportHTML()"><span data-en="🌐 Export HTML"
+                                data-ar="🌐 تصدير HTML">🌐 Export HTML</span></button>
                         <button class="btn btn-secondary" onclick="exportJSON()"><span data-en="📋 Export JSON"
                                 data-ar="📋 تصدير JSON">📋 Export JSON</span></button>
                     </div>
@@ -2098,6 +2100,172 @@
             }
         }
 
+        // PDF Export Function
+        function exportPDF() {
+            if (!currentAnalysis) {
+                alert(i18n[currentLang].noAnalysis || 'Please analyze text first');
+                return;
+            }
+
+            try {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = currentLang === 'ar' ? 'جاري التصدير...' : 'Exporting...';
+                btn.disabled = true;
+
+                const isAr = currentLang === 'ar';
+                const prediction = currentAnalysis.prediction;
+                const analyzer = currentAnalysis;
+
+                const classLabel = prediction.classification === 'HUMAN_WRITTEN' ?
+                    (isAr ? '✅ نص بشري' : '✅ Human Written') :
+                    prediction.classification === 'AI_GENERATED' ?
+                        (isAr ? '🤖 AI مولد' : '🤖 AI Generated') :
+                        (isAr ? '⚠️ مختلط' : '⚠️ Mixed');
+                const classColor = prediction.classification === 'HUMAN_WRITTEN' ? '#27ae60' :
+                    prediction.classification === 'AI_GENERATED' ? '#e74c3c' : '#f39c12';
+
+                // Build PDF report HTML
+                const reportHTML = `
+                    <div style="padding: 30px; font-family: 'Segoe UI', Tahoma, sans-serif; background: white; direction: ${isAr ? 'rtl' : 'ltr'};">
+                        <!-- Header -->
+                        <div style="text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px solid #3498db;">
+                            <h1 style="color: #3498db; margin: 0 0 10px 0; font-size: 24px;">🔬 ${isAr ? 'تقرير كشف النصوص AI' : 'AI Text Detection Report'}</h1>
+                            <p style="color: #666; margin: 5px 0; font-size: 12px;">aitextdetector.free</p>
+                            <p style="color: #999; margin: 5px 0; font-size: 11px;">${new Date().toLocaleString(isAr ? 'ar-SA' : 'en-US')}</p>
+                        </div>
+                        
+                        <!-- Main Result -->
+                        <div style="text-align: center; margin: 20px 0; padding: 20px; background: ${classColor}15; border-radius: 10px; border: 2px solid ${classColor};">
+                            <div style="font-size: 42px; font-weight: bold; color: ${classColor};">${prediction.aiScore.toFixed(1)}%</div>
+                            <div style="font-size: 20px; font-weight: bold; color: ${classColor}; margin-top: 8px;">${classLabel}</div>
+                            <p style="color: #666; margin-top: 8px; font-size: 13px;">${isAr ? 'درجة الثقة' : 'Confidence'}: ${prediction.confidence.toFixed(1)}%</p>
+                        </div>
+                        
+                        <!-- Scores -->
+                        <table style="width: 100%; margin: 20px 0; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 48%; padding: 15px; background: #27ae6015; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 28px; font-weight: bold; color: #27ae60;">${prediction.humanScore.toFixed(1)}%</div>
+                                    <div style="color: #666; margin-top: 5px;">${isAr ? 'نسبة بشري' : 'Human Score'}</div>
+                                </td>
+                                <td style="width: 4%;"></td>
+                                <td style="width: 48%; padding: 15px; background: #e74c3c15; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 28px; font-weight: bold; color: #e74c3c;">${prediction.aiScore.toFixed(1)}%</div>
+                                    <div style="color: #666; margin-top: 5px;">${isAr ? 'نسبة AI' : 'AI Score'}</div>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <!-- Statistics -->
+                        <div style="margin: 20px 0;">
+                            <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; font-size: 16px;">📊 ${isAr ? 'الإحصائيات' : 'Statistics'}</h2>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #eee; background: #f8f9fa;">${isAr ? 'الكلمات' : 'Words'}</td>
+                                    <td style="padding: 8px; border: 1px solid #eee; font-weight: bold;">${analyzer.wordCount || analyzer.tokens?.length || 'N/A'}</td>
+                                    <td style="padding: 8px; border: 1px solid #eee; background: #f8f9fa;">${isAr ? 'الجمل' : 'Sentences'}</td>
+                                    <td style="padding: 8px; border: 1px solid #eee; font-weight: bold;">${analyzer.sentences?.length || 'N/A'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- Metrics -->
+                        <div style="margin: 20px 0;">
+                            <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; font-size: 16px;">📈 ${isAr ? 'المقاييس المتقدمة' : 'Advanced Metrics'}</h2>
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 10px; margin-top: 10px;">
+                                <tr>
+                                    <td style="padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #3498db;">
+                                        <div style="color: #666; font-size: 11px;">ENTROPY</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #3498db;">${prediction.models?.stat?.entropy?.toFixed(3) || 'N/A'}</div>
+                                    </td>
+                                    <td style="padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #9b59b6;">
+                                        <div style="color: #666; font-size: 11px;">PERPLEXITY</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #9b59b6;">${prediction.models?.stat?.perplexity?.toFixed(2) || 'N/A'}</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #e67e22;">
+                                        <div style="color: #666; font-size: 11px;">BURSTINESS</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #e67e22;">${prediction.models?.stat?.burstiness?.toFixed(3) || 'N/A'}</div>
+                                    </td>
+                                    <td style="padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #1abc9c;">
+                                        <div style="color: #666; font-size: 11px;">TTR</div>
+                                        <div style="font-size: 18px; font-weight: bold; color: #1abc9c;">${prediction.models?.stat?.ttr?.toFixed(3) || 'N/A'}</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- Text Preview -->
+                        <div style="margin: 20px 0;">
+                            <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; font-size: 16px;">📝 ${isAr ? 'معاينة النص' : 'Text Preview'}</h2>
+                            <div style="padding: 12px; background: #f8f9fa; border-radius: 6px; font-size: 11px; line-height: 1.6; color: #555; max-height: 100px; overflow: hidden;">
+                                ${analyzer.text?.substring(0, 400) || ''}${(analyzer.text?.length > 400) ? '...' : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 2px solid #eee;">
+                            <p style="color: #999; font-size: 11px;">© 2026 aitextdetector.free</p>
+                        </div>
+                    </div>
+                `;
+
+                // Create hidden container for PDF generation
+                const container = document.createElement('div');
+                container.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 800px;';
+                container.innerHTML = reportHTML;
+                document.body.appendChild(container);
+
+                console.log('PDF HTML:', reportHTML.substring(0, 500) + '...');
+
+                const filename = `AI_Detection_Report_${Date.now()}.pdf`;
+                const opt = {
+                    margin: [10, 10, 10, 10],
+                    filename: filename,
+                    image: { type: 'jpeg', quality: 0.95 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+                };
+
+                html2pdf().set(opt).from(container).outputPdf('blob').then((pdfBlob) => {
+                    document.body.removeChild(container);
+
+                    // Use FileSaver for reliable download
+                    if (typeof saveAs !== 'undefined') {
+                        saveAs(pdfBlob, filename);
+                    } else {
+                        const url = URL.createObjectURL(pdfBlob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                    }
+
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+
+                    const msg = document.createElement('div');
+                    msg.style.cssText = 'position:fixed;top:20px;right:20px;background:#27ae60;color:#fff;padding:15px 25px;border-radius:8px;z-index:10000;';
+                    msg.textContent = isAr ? '✅ تم تنزيل PDF!' : '✅ PDF Downloaded!';
+                    document.body.appendChild(msg);
+                    setTimeout(() => document.body.removeChild(msg), 3000);
+                }).catch(err => {
+                    console.error('PDF Export Error:', err);
+                    document.body.removeChild(container);
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                    alert(isAr ? 'حدث خطأ في تصدير PDF' : 'PDF export error');
+                });
+            } catch (error) {
+                console.error('Export error:', error);
+                const btn = event.target?.closest('button');
+                if (btn) btn.disabled = false;
+            }
+        }
+
         function exportHTML() {
             if (!currentAnalysis) {
                 alert(i18n[currentLang].noAnalysis || 'Please analyze text first');
@@ -2590,7 +2758,7 @@
             © 2026 AITextDetector.free - Free AI Text Detection Tool
         </p>
         <p style="margin: 5px 0; font-size: 0.75em; opacity: 0.7; font-family: 'Courier New', monospace;">
-            v1.9 • 14 Jan 2026 • 20:40 Amman Local Time
+            v2.0 • 14 Jan 2026 • 20:45 Amman Local Time
         </p>
     </footer>
 </body>
