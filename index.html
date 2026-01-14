@@ -1743,35 +1743,59 @@
             }
 
 
-            // 🧠 Statistical Classifier
+            // 🧠 Statistical Classifier - CALIBRATED against Sapling.ai
             statisticalModel() {
                 const entropy = this.analyzer.calculateEntropy();
                 const perplexity = this.analyzer.calculatePerplexity();
                 const burstiness = this.analyzer.calculateBurstiness();
                 const ttr = this.analyzer.calculateTTR();
 
-                // AI Text Characteristics:
-                // - Lower entropy (more predictable)
-                // - Lower perplexity (formulaic)
-                // - Higher burstiness (repetitive)
-                // - Lower TTR (less vocabulary variety)
+                // RECALIBRATED AI Text Characteristics:
+                // AI text typically has: moderate entropy (3.5-4.5), medium perplexity (20-60)
+                // consistent sentence structure, moderate TTR (0.4-0.7)
 
-                // Sensitivity affects scoring aggressiveness
-                // High = more aggressive AI detection (stricter)
-                // Low = more lenient (requires stronger evidence)
-                const sensitivityMultiplier = this.sensitivity === 'high' ? 1.25 :
-                    this.sensitivity === 'low' ? 0.75 : 1.0;
+                const sensitivityMultiplier = this.sensitivity === 'high' ? 1.3 :
+                    this.sensitivity === 'low' ? 0.7 : 1.0;
 
-                const entropyScore = Math.min(entropy / 6, 1) * 0.3; // 0-1, higher = human
-                const perplexityScore = Math.min(perplexity / 50, 1) * 0.3; // 0-1, higher = human
-                const ttrScore = ttr * 0.25; // 0-1, higher = human
-                const burstinessScore = (1 - Math.min(burstiness / 5, 1)) * 0.15; // 0-1, lower = human
+                // Entropy: AI tends to be in 3.5-4.5 range (not too high, not too low)
+                // Very high or very low = more human-like
+                let entropyScore;
+                if (entropy >= 3.5 && entropy <= 4.5) {
+                    entropyScore = 0.7; // Typical AI range
+                } else if (entropy >= 3.0 && entropy <= 5.0) {
+                    entropyScore = 0.5; // Borderline
+                } else {
+                    entropyScore = 0.25; // Human-like (outside typical AI range)
+                }
 
-                const humanScore = entropyScore + perplexityScore + ttrScore + burstinessScore;
+                // Perplexity: AI tends to be in 20-60 range
+                let perplexityScore;
+                if (perplexity >= 20 && perplexity <= 60) {
+                    perplexityScore = 0.65; // Typical AI perplexity
+                } else if (perplexity >= 10 && perplexity <= 80) {
+                    perplexityScore = 0.45; // Borderline
+                } else {
+                    perplexityScore = 0.2; // Very human-like
+                }
 
-                // Apply sensitivity to AI score (more aggressive detection in high mode)
-                let aiScore = (1 - humanScore) * sensitivityMultiplier;
-                aiScore = Math.min(Math.max(aiScore, 0), 1); // Clamp 0-1
+                // TTR: AI tends to have moderate TTR (0.4-0.7)
+                let ttrScore;
+                if (ttr >= 0.4 && ttr <= 0.7) {
+                    ttrScore = 0.6; // Typical AI TTR
+                } else if (ttr > 0.7) {
+                    ttrScore = 0.25; // High diversity = human
+                } else {
+                    ttrScore = 0.4; // Low diversity could be AI or short text
+                }
+
+                // Burstiness: Low burstiness = AI (consistent), High = Human (variable)
+                const burstinessScore = burstiness < 3 ? 0.7 : burstiness < 6 ? 0.4 : 0.2;
+
+                // Weighted combination
+                let aiScore = (entropyScore * 0.25 + perplexityScore * 0.30 +
+                    ttrScore * 0.25 + burstinessScore * 0.20) * sensitivityMultiplier;
+                aiScore = Math.min(Math.max(aiScore, 0), 1);
+                const humanScore = 1 - aiScore;
 
                 return { humanScore, aiScore, entropy, perplexity, burstiness, ttr };
             }
@@ -2979,7 +3003,7 @@
             © 2026 AITextDetector.free - Free AI Text Detection Tool
         </p>
         <p style="margin: 5px 0; font-size: 0.75em; opacity: 0.7; font-family: 'Courier New', monospace;">
-            v3.2 • 14 Jan 2026 • 22:40 • Calibrated against Sapling.ai
+            v3.3 • 14 Jan 2026 • 22:50 • Statistical Model Recalibrated
         </p>
     </footer>
 </body>
