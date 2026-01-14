@@ -1119,6 +1119,16 @@
                     waitingSpan.textContent = currentLang === 'ar' ? waitingSpan.getAttribute('data-ar') : waitingSpan.getAttribute('data-en');
                 }
             }
+
+            // Re-render batch results if they exist
+            if (typeof batchResults !== 'undefined' && batchResults.length > 0 && typeof displayBatchResults === 'function') {
+                displayBatchResults();
+            }
+
+            // Re-render history to update classification labels
+            if (typeof historyManager !== 'undefined' && historyManager.updateHistoryUI) {
+                historyManager.updateHistoryUI();
+            }
         }
 
 
