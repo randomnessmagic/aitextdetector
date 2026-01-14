@@ -1854,7 +1854,8 @@
                 document.getElementById('classification').textContent = i18n[currentLang].aiGenerated;
             } else {
                 scoreCircle.className = 'score-circle mixed';
-                scoreCircle.textContent = '50%';
+                // Show actual AI score instead of hardcoded 50% for mixed results
+                scoreCircle.textContent = prediction.aiScore.toFixed(1) + '%';
                 document.getElementById('classification').className = 'classification mixed-text';
                 document.getElementById('classification').textContent = i18n[currentLang].mixedText;
             }
@@ -2282,15 +2283,17 @@
 
                     // Use outputPdf with save to ensure proper PDF generation
                     html2pdf().set(opt).from(reportContainer).outputPdf('blob').then((pdfBlob) => {
-                        // Create download link with proper MIME type
-                        const url = URL.createObjectURL(new Blob([pdfBlob], { type: 'application/pdf' }));
+                        // Create download link with proper MIME type (no double wrapping)
+                        const url = URL.createObjectURL(pdfBlob);
                         const link = document.createElement('a');
                         link.href = url;
                         link.download = filename + '.pdf';
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-                        URL.revokeObjectURL(url);
+
+                        // Delay URL revocation to ensure download completes
+                        setTimeout(() => URL.revokeObjectURL(url), 2000);
 
                         // Clean up
                         document.body.removeChild(reportContainer);
