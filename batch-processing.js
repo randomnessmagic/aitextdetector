@@ -64,7 +64,7 @@ function handleFiles(files) {
                 <span style="color: #95a5a6; margin-left: 10px;">(${(file.size / 1024).toFixed(1)} KB)</span>
                 <span style="color: #3498db; margin-left: 5px; font-size: 0.8em;">${ext.toUpperCase()}</span>
             </div>
-            <span style="color: #f39c12;">⏳ Pending</span>
+            <span style="color: #f39c12;" data-en="⏳ Pending" data-ar="⏳ قيد الانتظار">⏳ Pending</span>
         `;
         container.appendChild(fileItem);
     });
@@ -110,7 +110,8 @@ async function processBatchFiles() {
         const file = batchFiles[i];
         const item = items[i];
 
-        item.querySelector('span:last-child').innerHTML = '<span style="color: #3498db;">🔄 Processing...</span>';
+
+        item.querySelector('span:last-child').innerHTML = '<span style="color: #3498db;" data-en="🔄 Processing..." data-ar="🔄 جاري المعالجة...">🔄 Processing...</span>';
 
         try {
             const text = await readFileContent(file);
@@ -122,7 +123,7 @@ async function processBatchFiles() {
                     error: typeof currentLang !== 'undefined' && currentLang === 'ar' ?
                         'النص قصير جداً (الحد الأدنى 50 كلمة)' : 'Text too short (min 50 words)'
                 });
-                item.querySelector('span:last-child').innerHTML = '<span style="color: #e74c3c;">❌ Error</span>';
+                item.querySelector('span:last-child').innerHTML = '<span style="color: #e74c3c;" data-en="❌ Error" data-ar="❌ خطأ">❌ Error</span>';
                 continue;
             }
 
@@ -140,7 +141,7 @@ async function processBatchFiles() {
                 wordCount: analyzer.tokens.length
             });
 
-            item.querySelector('span:last-child').innerHTML = '<span style="color: #27ae60;">✅ Done</span>';
+            item.querySelector('span:last-child').innerHTML = '<span style="color: #27ae60;" data-en="✅ Done" data-ar="✅ تم">✅ Done</span>';
         } catch (error) {
             console.error('File processing error:', error);
             batchResults.push({
@@ -148,7 +149,7 @@ async function processBatchFiles() {
                 status: 'error',
                 error: error.message || 'Processing failed'
             });
-            item.querySelector('span:last-child').innerHTML = '<span style="color: #e74c3c;">❌ Error</span>';
+            item.querySelector('span:last-child').innerHTML = '<span style="color: #e74c3c;" data-en="❌ Error" data-ar="❌ حطأ">❌ Error</span>';
         }
 
         await new Promise(resolve => setTimeout(resolve, 100));
