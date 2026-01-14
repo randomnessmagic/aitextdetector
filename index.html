@@ -1069,6 +1069,12 @@
             document.documentElement.setAttribute('lang', currentLang);
             document.documentElement.setAttribute('dir', dir);
             updateUIText();
+
+            // Re-render results if they exist
+            if (currentAnalysis && currentAnalysis.prediction) {
+                displayResults(currentAnalysis.prediction, currentAnalysis.analyzer);
+                updateInsights(currentAnalysis.prediction, currentAnalysis.analyzer);
+            }
         }
 
         function updateUIText() {
@@ -1084,6 +1090,14 @@
                 const text = currentLang === 'ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en');
                 if (text) {
                     el.textContent = text;
+                }
+            });
+
+            // Update select options with data attributes
+            document.querySelectorAll('option[data-en][data-ar]').forEach(option => {
+                const text = currentLang === 'ar' ? option.getAttribute('data-ar') : option.getAttribute('data-en');
+                if (text) {
+                    option.textContent = text;
                 }
             });
 
@@ -2028,10 +2042,14 @@
             }
 
             try {
-                // Show loading
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = currentLang === 'ar' ? 'جاري التصدير...' : 'Exporting...';
+                // Show loading and preserve original content (including spans with data attributes)
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                const loadingText = currentLang === 'ar' ? 'جاري التصدير...' : 'Exporting...';
+
+                // Temporarily update only the text content if possible, or just replace innerHTML
+                // To avoid breaking i18n on restore, we save originalHTML.
+                btn.textContent = loadingText;
                 btn.disabled = true;
 
                 // Create professional PDF report content
@@ -2048,6 +2066,24 @@
                 const classColor = prediction.classification === 'HUMAN_WRITTEN' ? '#27ae60' :
                     prediction.classification === 'AI_GENERATED' ? '#e74c3c' : '#f39c12';
 
+                // Generate Insights HTML for PDF
+                const suggestions = new ImprovementSuggestions(analyzer, prediction, currentLang);
+                const insightsList = suggestions.generate();
+
+                const insightsHTML = insightsList.length > 0 ? `
+                    <div style="margin: 30px 0;">
+                        <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                            💡 ${isAr ? 'رؤى وتوصيات' : 'Insights & Recommendations'}
+                        </h2>
+                        ${insightsList.map(insight => `
+                            <div style="margin-bottom: 15px; padding: 10px; background: #eef2f7; border-radius: 5px; border-${isAr ? 'right' : 'left'}: 4px solid #3498db;">
+                                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">${insight.title}</div>
+                                <div style="color: #555; font-size: 13px;">${insight.text}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '';
+
                 // Create styled report container
                 const reportContainer = document.createElement('div');
                 reportContainer.id = 'pdf-report-temp';
@@ -2058,6 +2094,7 @@
                     direction: ${isAr ? 'rtl' : 'ltr'};
                     max-width: 800px;
                     margin: 0 auto;
+                    color: #333;
                 `;
 
                 reportContainer.innerHTML = `
@@ -2138,6 +2175,9 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Insights & Recommendations -->
+                    ${insightsHTML}
                     
                     <!-- Text Preview -->
                     <div style="margin: 30px 0;">
@@ -2163,6 +2203,7 @@
                 document.body.appendChild(reportContainer);
 
                 // Generate PDF
+                // Increased timeout to ensure rendering is complete
                 setTimeout(() => {
                     const filename = `AI_Detection_Report_${Date.now()}.pdf`;
 
@@ -2174,7 +2215,8 @@
                             scale: 2,
                             useCORS: true,
                             logging: false,
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#ffffff',
+                            windowWidth: 800 // Ensure consistent width
                         },
                         jsPDF: { orientation: 'p', unit: 'mm', format: 'a4', compress: true },
                         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -2182,19 +2224,20 @@
 
                     html2pdf().set(opt).from(reportContainer).save().then(() => {
                         document.body.removeChild(reportContainer);
-                        btn.textContent = originalText;
+                        btn.innerHTML = originalHTML; // Restore original HTML (with data attributes)
                         btn.disabled = false;
                     }).catch(err => {
                         console.error('PDF Export Error:', err);
                         document.body.removeChild(reportContainer);
                         alert(currentLang === 'ar' ? 'حدث خطأ في التصدير' : 'Export error occurred');
-                        btn.textContent = originalText;
+                        btn.innerHTML = originalHTML;
                         btn.disabled = false;
                     });
-                }, 100);
+                }, 500); // 500ms delay for stability
             } catch (error) {
-                console.error('PDF generation failed:', error);
-                alert(currentLang === 'ar' ? 'فشل توليد PDF' : 'PDF generation failed');
+                console.error('Export error:', error);
+                const btn = event.target.closest('button');
+                if (btn) btn.disabled = false;
             }
         }
 
