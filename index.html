@@ -2302,13 +2302,38 @@
                         link.click();
                         document.body.removeChild(link);
 
-                        // Delay URL revocation to ensure download completes
-                        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+                        // Cleanup
+                        setTimeout(() => {
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+
+                            // Show success message
+                            const successMsg = document.createElement('div');
+                            successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #27ae60; color: white; padding: 15px 25px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: Arial, sans-serif;';
+                            successMsg.textContent = currentLang === 'ar' ? '✅ تم تنزيل PDF بنجاح! تحقق من مجلد التنزيلات' : '✅ PDF Downloaded! Check your Downloads folder';
+                            document.body.appendChild(successMsg);
+
+                            setTimeout(() => {
+                                successMsg.style.opacity = '0';
+                                successMsg.style.transition = 'opacity 0.5s';
+                                setTimeout(() => document.body.removeChild(successMsg), 500);
+                            }, 4000);
+                        }, 2000);
 
                         // Clean up
                         document.body.removeChild(reportContainer);
-                        btn.innerHTML = originalHTML; // Restore original HTML (with data attributes)
+                        btn.innerHTML = originalHTML;
                         btn.disabled = false;
+
+                        // Add visual confirmation
+                        btn.style.background = '#27ae60';
+                        btn.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            btn.style.background = '';
+                            btn.style.transform = '';
+                            btn.style.transition = 'all 0.3s';
+                        }, 1000);
                     }).catch(err => {
                         console.error('PDF Export Error:', err);
                         document.body.removeChild(reportContainer);
@@ -2444,7 +2469,7 @@
     <!-- Version Footer -->
     <footer style="text-align: center; padding: 20px; background: #2c3e50; color: white; margin-top: 40px;">
         <p style="margin: 5px 0; font-size: 0.75em; opacity: 0.8; font-family: 'Courier New', monospace;">
-            v1.2 • 14 Jan 2026 • 14:40 Amman Local Time
+            v1.3 • 14 Jan 2026 • 14:50 Amman Local Time
         </p>
     </footer>
 </body>
