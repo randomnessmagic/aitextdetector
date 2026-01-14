@@ -1593,13 +1593,22 @@
                 // - Higher burstiness (repetitive)
                 // - Lower TTR (less vocabulary variety)
 
+                // Sensitivity affects scoring aggressiveness
+                // High = more aggressive AI detection (stricter)
+                // Low = more lenient (requires stronger evidence)
+                const sensitivityMultiplier = this.sensitivity === 'high' ? 1.25 :
+                    this.sensitivity === 'low' ? 0.75 : 1.0;
+
                 const entropyScore = Math.min(entropy / 6, 1) * 0.3; // 0-1, higher = human
                 const perplexityScore = Math.min(perplexity / 50, 1) * 0.3; // 0-1, higher = human
                 const ttrScore = ttr * 0.25; // 0-1, higher = human
                 const burstinessScore = (1 - Math.min(burstiness / 5, 1)) * 0.15; // 0-1, lower = human
 
                 const humanScore = entropyScore + perplexityScore + ttrScore + burstinessScore;
-                const aiScore = 1 - humanScore;
+
+                // Apply sensitivity to AI score (more aggressive detection in high mode)
+                let aiScore = (1 - humanScore) * sensitivityMultiplier;
+                aiScore = Math.min(Math.max(aiScore, 0), 1); // Clamp 0-1
 
                 return { humanScore, aiScore, entropy, perplexity, burstiness, ttr };
             }
@@ -1616,11 +1625,16 @@
                 // - Lower punctuation variety
                 // - More consistent sentence length
 
+                // Sensitivity affects how strictly we evaluate
+                const sensitivityMultiplier = this.sensitivity === 'high' ? 1.25 :
+                    this.sensitivity === 'low' ? 0.75 : 1.0;
+
                 const surprisalScore = Math.min(surprisal.mean / 15, 1) * 0.4; // Lower = AI
                 const punctuationScore = (punctuation.variety / 6) * 0.3; // Lower = AI
                 const sentenceConsistency = 1 - Math.min(Math.abs(avgSentenceLength - 12) / 20, 1) * 0.3;
 
-                const aiScore = 1 - (surprisalScore + punctuationScore + sentenceConsistency) / 3;
+                let aiScore = (1 - (surprisalScore + punctuationScore + sentenceConsistency) / 3) * sensitivityMultiplier;
+                aiScore = Math.min(Math.max(aiScore, 0), 1);
                 const humanScore = 1 - aiScore;
 
                 return { humanScore, aiScore, surprisal, readability, avgSentenceLength, punctuation };
@@ -1638,7 +1652,12 @@
                 const repetitionScore = Math.min(topWordRatio * 3, 1);
                 const wordLengthVariance = this.calculateVariance(wordLengths);
 
-                const aiScore = (repetitionScore * 0.6 + (1 - Math.min(wordLengthVariance / 10, 1)) * 0.4);
+                // Sensitivity affects scoring
+                const sensitivityMultiplier = this.sensitivity === 'high' ? 1.2 :
+                    this.sensitivity === 'low' ? 0.8 : 1.0;
+
+                let aiScore = (repetitionScore * 0.6 + (1 - Math.min(wordLengthVariance / 10, 1)) * 0.4) * sensitivityMultiplier;
+                aiScore = Math.min(Math.max(aiScore, 0), 1);
                 const humanScore = 1 - aiScore;
 
                 return { humanScore, aiScore, avgWordLength, topWordRatio, wordLengthVariance };
@@ -1657,7 +1676,12 @@
                 // AI uses limited high-frequency words
                 const patternScore = Math.min(highFreqWords / 20, 1);
 
-                const aiScore = patternScore * 0.7;
+                // Sensitivity affects pattern detection
+                const sensitivityMultiplier = this.sensitivity === 'high' ? 1.15 :
+                    this.sensitivity === 'low' ? 0.85 : 1.0;
+
+                let aiScore = patternScore * 0.7 * sensitivityMultiplier;
+                aiScore = Math.min(Math.max(aiScore, 0), 1);
                 const humanScore = 1 - aiScore;
 
                 return { humanScore, aiScore, highFreqWords, maxFreq };
@@ -1670,13 +1694,33 @@
                 const style = this.stylometricModel();
                 const pattern = this.patternModel();
 
-                // Weighted ensemble voting
-                const weights = {
-                    statistical: 0.35,
-                    linguistic: 0.35,
-                    stylometric: 0.20,
-                    pattern: 0.10
-                };
+                // Weighted ensemble voting - adjust weights based on sensitivity
+                let weights;
+                if (this.sensitivity === 'high') {
+                    // High sensitivity: Trust statistical and linguistic more
+                    weights = {
+                        statistical: 0.40,
+                        linguistic: 0.35,
+                        stylometric: 0.15,
+                        pattern: 0.10
+                    };
+                } else if (this.sensitivity === 'low') {
+                    // Low sensitivity: More balanced, less aggressive
+                    weights = {
+                        statistical: 0.30,
+                        linguistic: 0.30,
+                        stylometric: 0.25,
+                        pattern: 0.15
+                    };
+                } else {
+                    // Medium (balanced)
+                    weights = {
+                        statistical: 0.35,
+                        linguistic: 0.35,
+                        stylometric: 0.20,
+                        pattern: 0.10
+                    };
+                }
 
                 const aiScore = (
                     stat.aiScore * weights.statistical +
@@ -2219,11 +2263,11 @@
                 // Generate PDF
                 // Increased timeout to ensure rendering is complete
                 setTimeout(() => {
-                    const filename = `AI_Detection_Report_${Date.now()}.pdf`;
+                    const filename = `AI_Detection_Report_${Date.now()}`;
 
                     const opt = {
                         margin: [10, 10, 10, 10],
-                        filename: filename,
+                        filename: filename + '.pdf', // Ensure .pdf extension
                         image: { type: 'jpeg', quality: 0.98 },
                         html2canvas: {
                             scale: 2,
@@ -2236,7 +2280,19 @@
                         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                     };
 
-                    html2pdf().set(opt).from(reportContainer).save().then(() => {
+                    // Use outputPdf with save to ensure proper PDF generation
+                    html2pdf().set(opt).from(reportContainer).outputPdf('blob').then((pdfBlob) => {
+                        // Create download link with proper MIME type
+                        const url = URL.createObjectURL(new Blob([pdfBlob], { type: 'application/pdf' }));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename + '.pdf';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+
+                        // Clean up
                         document.body.removeChild(reportContainer);
                         btn.innerHTML = originalHTML; // Restore original HTML (with data attributes)
                         btn.disabled = false;
